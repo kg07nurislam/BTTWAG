@@ -1224,4 +1224,284 @@ document.querySelector("#change-color-btn")
   const elapsed =
    Date.now() - d.lastColorChangeAt;
   
+  if (elapsed < COLOR_COOLDOWN) {
+   
+   const minutes = Math.ceil(
+    (COLOR_COOLDOWN - elapsed) / 60000
+   );
+   
+   return toast(
+    `${minutes} мүнөт күтүү керек!`
+   );
+  }
+  
+  if (coins < COLOR_CHANGE_COST) {
+   return toast("Монета жетишсиз!");
+  }
+  
+  const newColor =
+   document.querySelector("#new-shop-color").value;
+  
+  if (newColor.toLowerCase() === d.color.toLowerCase()) {
+   return toast("Бул түс азыр колдонулуп жатат!");
+  }
+  
+  setCoins(coins - COLOR_CHANGE_COST);
+  
+  // Фасаддын түсүн өзгөртүү
+  d.facadeMaterial.color.set(newColor);
+  
+  // Четтери да жаңы түскө ылайык өзгөрөт
+  d.trimMaterial.color
+   .set(newColor)
+   .multiplyScalar(0.78);
+  
+  d.color = newColor;
+  
+  // Бир сааттык чектөөнү баштоо
+  d.lastColorChangeAt = Date.now();
+  
+  // Браузерде чектөө убактысын сактоо
+  localStorage.setItem(
+   `biztown_color_${selected.index}`,
+   String(d.lastColorChangeAt)
+  );
+  
+  openPlot(selected);
+  
+  toast("Дүкөндүн түсү өзгөртүлдү! 🎨");
+  
+ };
+
+
+// =================================
+// NAVIGATION
+// =================================
+
+document.querySelectorAll(".nav-item").forEach(button => {
+ 
+ button.onclick = () => {
+  
+  document.querySelectorAll(".nav-item")
+   .forEach(b => b.classList.remove("active"));
+  
+  button.classList.add("active");
+  
+  const tab = button.dataset.tab;
+  
+  if (tab === "city") {
+   
+   panel.classList.remove("open");
+   
+   toast("Шаар картасы");
+   
+  } else if (tab === "shop") {
+   
+   const plot = plots.find(p => p.building);
+   
+   if (plot) {
+    openPlot(plot);
+   } else {
+    toast("Адегенде дүкөн куруңуз");
+   }
+   
+  } else {
+   
+   toast("Бул бөлүм кийинки этапта кошулат");
+   
+  }
+  
+ };
+ 
+});
+
+// ========================================
+// BIZTOWN TELEGRAM + SUPABASE AUTH
+// ========================================
+
+const SUPABASE_URL = "https://ttifdpdseiohzenrbuwi.supabase.co";
+
+const SUPABASE_PUBLIC_KEY = "sb_publishable_gjgZZIEBT_iG8BsuAk5cfg_jLcBPrF4";
+
+const API_URL =
+ `${SUPABASE_URL}/functions/v1/biztown-api`;
+
+const tg = window.Telegram?.WebApp;
+
+let currentPlayer = null;
+let currentShop = null;
+let currentCollector = null;
+
+async function authenticatePlayer() {
+ 
+ if (!tg || !tg.initData) {
+  
+  toast(
+   "Telegram аркылуу кирүү керек. Азыр Demo режим."
+  );
+  
+  return false;
+ }
+ 
+ tg.ready();
+ tg.expand();
+ 
+ try {
+  
+  const result = await fetch(API_URL, {
+   
+   method: "POST",
+   
+   headers: {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_PUBLIC_KEY
+   },
+   
+   body: JSON.stringify({
+    initData: tg.initData
+   })
+   
+  });
+  
+  const data = await result.json();
+  
+  if (!result.ok || !data.success) {
+   
+   console.error("AUTH ERROR:", data);
+   
+   toast("Авторизация ишке ашкан жок!");
+   
+   return false;
+  }
+  
+  // Оюнчу маалыматтары
+  currentPlayer = data.player;
+  
+  currentShop = data.shop;
+  
+  currentCollector = data.collector;
+  
+  // Сервердеги монетаны көрсөтүү
+  setCoins(currentPlayer.coins);
+  
+  console.log("BIZTOWN PLAYER:", currentPlayer);
+  
+  console.log("BIZTOWN SHOP:", currentShop);
+  
+  console.log("BIZTOWN COLLECTOR:", currentCollector);
+  
+  toast(
+   `Кош келиңиз, ${currentPlayer.firstName}!`
+  );
+  
+  return true;
+  
+ } catch (error) {
+  
+  console.error(error);
+  
+  toast("Сервер менен байланыш жок!");
+  
+  return false;
+  
+ }
+ 
+}
+
+// Telegram аркылуу авторизация
+authenticatePlayer();
+
+// =================================
+// REALISTIC CAR ANIMATION
+// =================================
+
+let previousTime = 0;
+
+function animate(time = 0) {
+ 
+ requestAnimationFrame(animate);
+ 
+ const delta = previousTime ?
+  Math.min((time - previousTime) / 1000, 0.05) :
+  0;
+ 
+ previousTime = time;
+ 
+ cars.forEach(c => {
+  
+  if (c.kind === "ring") {
+   
+   // Айланма жолдо тангенциалдык кыймыл
+   c.angle +=
+    (c.speed / c.radius) *
+    delta *
+    c.direction;
+   
+   c.g.position.x =
+    Math.cos(c.angle) * c.radius;
+   
+   c.g.position.z =
+    Math.sin(c.angle) * c.radius;
+   
+   // Машинанын алды кыймылдын багытына карайт
+   c.g.rotation.y =
+    c.direction > 0 ?
+    -c.angle :
+    Math.PI - c.angle;
+   
+  } else {
+   
+   c.progress +=
+    c.speed * delta * c.direction;
+   
+   if (c.progress > 42) {
+    c.progress = 11;
+   }
+   
+   if (c.progress < 11) {
+    c.progress = 42;
+   }
+   
+   const offset = c.baseX + c.lane;
+   
+   c.g.position.x =
+    offset * Math.cos(c.angle) +
+    c.progress * Math.sin(c.angle);
+   
+   c.g.position.z = -offset * Math.sin(c.angle) +
+    c.progress * Math.cos(c.angle);
+   
+   c.g.rotation.y =
+    c.direction > 0 ?
+    -c.angle :
+    Math.PI - c.angle;
+   
+  }
+  
+ });
+ 
+ controls.update();
+ 
+ renderer.render(scene, camera);
+}
+
+animate();
+
+// =================================
+// RESIZE
+// =================================
+
+addEventListener("resize", () => {
+ 
+ camera.aspect = innerWidth / innerHeight;
+ 
+ camera.updateProjectionMatrix();
+ 
+ renderer.setSize(innerWidth, innerHeight);
+ 
+ renderer.setPixelRatio(
+  Math.min(devicePixelRatio, 1.7)
+ );
+ 
+});
   
