@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ky">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+  <meta name="theme-color" content="#f3e8d7">
+  <title>BizTown — Build your business</title>
+  
+  <link rel="stylesheet" href="./src/styles.css">
+  
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <script type="importmap">
+    {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <main id="game">
+    
+    <div id="scene"></div>
+    
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">🏙️</span>
+        <span>BizTown</span>
+      </div>
+      
+      <div class="wallet">
+        <span>🪙</span>
+        <b id="coins">500</b>
+      </div>
+    </header>
+    
+    <section class="hint" id="hint">
+      Бош жерди тандап, биринчи дүкөнүңдү кур!
+    </section>
+    
+    <section class="panel" id="panel">
+      
+      <div class="panel-head">
+        <div>
+          <small>ТАНДАЛГАН ЖЕР</small>
+          <h2 id="plot-title">Жер тандаңыз</h2>
+        </div>
+        
+        <button class="close" id="close-panel">×</button>
+      </div>
+      
+      <p id="plot-description">
+        Шаардагы бош жерди басыңыз.
+      </p>
+      
+      <div class="actions">
+        <button class="primary" id="build-btn">
+          Дүкөн куруу · 100 🪙
+        </button>
+        
+        <button class="secondary" id="upgrade-btn" hidden>
+          Деңгээлин көтөрүү
+        </button>
+      </div>
+      
+      <div class="shop-form" id="shop-form" hidden>
+        
+        <label>
+          Дүкөндүн аталышы
+          <input id="shop-name" maxlength="22" placeholder="Мисалы: Nur Store">
+        </label>
+        
+        <label>
+          Дүкөндүн түрү
+          <select id="shop-type">
+            <option>Кийим дүкөнү</option>
+            <option>Телефон дүкөнү</option>
+            <option>Азык-түлүк</option>
+            <option>Техника дүкөнү</option>
+            <option>Кофейня</option>
+          </select>
+        </label>
+        
+        <label>
+          Имараттын түсү
+          <input id="shop-color" type="color" value="#69b99a">
+        </label>
+        
+        <button class="primary" id="confirm-build">
+          Куруу
+        </button>
+        
+      </div>
+      
+      <div class="stats" id="shop-stats" hidden></div>
+      <div class="color-control" id="color-control" hidden>
+        
+        <label for="new-shop-color">
+          🎨 Дүкөндүн түсүн өзгөртүү
+        </label>
+        
+        <input type="color" id="new-shop-color" value="#69b99a">
+        
+        <p id="color-cooldown">
+          Биринчи түс акысыз. Кийинки өзгөртүү: 100 🪙
+        </p>
+        
+        <button class="primary" id="change-color-btn">
+          Түстү өзгөртүү · 100 🪙
+        </button>
+        
+      </div>
+    </section>
+    
+    <nav class="bottom-nav">
+      
+      <button class="nav-item active" data-tab="city">
+        <span>🏙️</span>Шаар
+      </button>
+      
+      <button class="nav-item" data-tab="shop">
+        <span>🏪</span>Дүкөнүм
+      </button>
+      
+      <button class="nav-item" data-tab="tasks">
+        <span>🎯</span>Тапшырма
+      </button>
+      
+      <button class="nav-item" data-tab="rating">
+        <span>🏆</span>Рейтинг
+      </button>
+      
+      <button class="nav-item" data-tab="market">
+        <span>🛍️</span>Базар
+      </button>
+      
+    </nav>
+    
+    <div class="toast" id="toast"></div>
+    
+  </main>
+  
+  <script type="module" src="./src/main.js"></script>
+</body>
+
+            </html>
